@@ -10,6 +10,9 @@ export default function WorkoutTracker() {
   const [currentSets, setCurrentSets] = useState('');
   const [selectedExercise, setSelectedExercise] = useState('all');
   const [view, setView] = useState('log'); // 'log' or 'chart'
+  const [motto, setMotto] = useState('BRICK BY BRICK');
+  const [isEditingMotto, setIsEditingMotto] = useState(false);
+  const [tempMotto, setTempMotto] = useState('');
 
   // Load workouts from localStorage on mount
   useEffect(() => {
@@ -17,12 +20,30 @@ export default function WorkoutTracker() {
     if (saved) {
       setWorkouts(JSON.parse(saved));
     }
+    
+    const savedMotto = localStorage.getItem('workoutMotto');
+    if (savedMotto) {
+      setMotto(savedMotto);
+    }
   }, []);
 
   // Save workouts to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('workoutData', JSON.stringify(workouts));
   }, [workouts]);
+
+  const saveMotto = () => {
+    const newMotto = tempMotto.trim() || 'BRICK BY BRICK';
+    setMotto(newMotto);
+    localStorage.setItem('workoutMotto', newMotto);
+    setIsEditingMotto(false);
+    setTempMotto('');
+  };
+
+  const startEditingMotto = () => {
+    setTempMotto(motto);
+    setIsEditingMotto(true);
+  };
 
   const addWorkout = () => {
     if (!currentExercise || !currentWeight || !currentReps || !currentSets) {
@@ -374,6 +395,52 @@ export default function WorkoutTracker() {
             </div>
           </>
         )}
+
+        {/* Motto Section */}
+        <div className="mt-8 text-center pb-8">
+          {!isEditingMotto ? (
+            <div className="flex flex-col items-center gap-3">
+              <div className="text-3xl font-bold tracking-wider text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 bg-clip-text">
+                {motto}
+              </div>
+              <button
+                onClick={startEditingMotto}
+                className="text-sm text-slate-400 hover:text-slate-300 transition-colors"
+              >
+                Edit Motto
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-3">
+              <input
+                type="text"
+                value={tempMotto}
+                onChange={(e) => setTempMotto(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && saveMotto()}
+                placeholder="Enter your motto"
+                className="bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-2 text-center text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-md"
+                autoFocus
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={saveMotto}
+                  className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg px-4 py-1 text-sm font-medium transition-colors"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => {
+                    setIsEditingMotto(false);
+                    setTempMotto('');
+                  }}
+                  className="bg-slate-600 hover:bg-slate-500 text-white rounded-lg px-4 py-1 text-sm font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
