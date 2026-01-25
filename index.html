@@ -4,470 +4,457 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Workout Tracker</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #1e293b 100%);
+      min-height: 100vh;
+      color: white;
+      padding: 20px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    h1 { 
+      text-align: center; 
+      font-size: 2.5rem; 
+      margin-bottom: 10px;
+      background: linear-gradient(to right, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .subtitle { text-align: center; color: #94a3b8; margin-bottom: 30px; }
+    .tabs {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 30px;
+      background: rgba(30, 41, 59, 0.5);
+      padding: 8px;
+      border-radius: 12px;
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .tab {
+      padding: 12px 24px;
+      border: none;
+      background: transparent;
+      color: #94a3b8;
+      cursor: pointer;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.3s;
+    }
+    .tab.active {
+      background: #3b82f6;
+      color: white;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    }
+    .card {
+      background: rgba(30, 41, 59, 0.5);
+      backdrop-filter: blur(10px);
+      border: 1px solid #475569;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .input-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    input, select, button {
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid #475569;
+      background: rgba(51, 65, 85, 0.5);
+      color: white;
+      font-size: 14px;
+    }
+    input::placeholder { color: #94a3b8; }
+    button {
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s;
+    }
+    .btn-primary {
+      background: #3b82f6;
+      border: none;
+      color: white;
+    }
+    .btn-primary:hover { background: #2563eb; }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid #475569;
+      border-radius: 16px;
+      padding: 20px;
+    }
+    .stat-label { color: #94a3b8; font-size: 14px; margin-bottom: 8px; }
+    .stat-value { font-size: 28px; font-weight: 700; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+    }
+    th {
+      text-align: left;
+      padding: 12px;
+      background: rgba(51, 65, 85, 0.5);
+      color: #cbd5e1;
+      font-size: 12px;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    td {
+      padding: 16px 12px;
+      border-top: 1px solid #475569;
+    }
+    tr:hover { background: rgba(51, 65, 85, 0.3); }
+    .btn-edit { color: #60a5fa; background: none; border: none; padding: 4px 12px; }
+    .btn-save { color: #34d399; background: none; border: none; padding: 4px 8px; }
+    .btn-cancel { color: #94a3b8; background: none; border: none; padding: 4px 8px; }
+    .btn-delete { color: #f87171; background: none; border: none; padding: 4px 8px; }
+    .motto-section {
+      text-align: center;
+      margin-top: 40px;
+      padding-bottom: 40px;
+    }
+    .motto-text {
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(to right, #60a5fa, #a78bfa, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 16px;
+      letter-spacing: 2px;
+    }
+    .motto-edit { color: #94a3b8; font-size: 14px; cursor: pointer; background: none; border: none; padding: 8px; }
+    .hidden { display: none; }
+    input[type="text"]:focus, select:focus { outline: none; border-color: #3b82f6; }
+  </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
-  <div id="root"></div>
-  
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7/babel.min.js"></script>
-  <script src="https://unpkg.com/recharts@2.5.0/dist/Recharts.js"></script>
-  
-  <script type="text/babel">
-    const { useState, useEffect } = React;
-    const { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } = Recharts;
+<body>
+  <div class="container">
+    <h1>💪 Workout Tracker</h1>
+    <p class="subtitle">Track your lifts, build your strength</p>
 
-    function WorkoutTracker() {
-      const [workouts, setWorkouts] = useState([]);
-      const [currentExercise, setCurrentExercise] = useState('');
-      const [currentWeight, setCurrentWeight] = useState('');
-      const [currentReps, setCurrentReps] = useState('');
-      const [currentSets, setCurrentSets] = useState('');
-      const [selectedExercise, setSelectedExercise] = useState('all');
-      const [view, setView] = useState('log');
-      const [motto, setMotto] = useState('BRICK BY BRICK');
-      const [isEditingMotto, setIsEditingMotto] = useState(false);
-      const [tempMotto, setTempMotto] = useState('');
-      const [editingWorkoutId, setEditingWorkoutId] = useState(null);
-      const [editForm, setEditForm] = useState({
-        exercise: '',
-        weight: '',
-        reps: '',
-        sets: ''
-      });
+    <div class="tabs">
+      <button class="tab active" onclick="showView('log')">Workout Log</button>
+      <button class="tab" onclick="showView('chart')">Progress Chart</button>
+    </div>
 
-      useEffect(() => {
-        const saved = localStorage.getItem('workoutData');
-        if (saved) {
-          try {
-            setWorkouts(JSON.parse(saved));
-          } catch (e) {
-            console.error('Error loading workouts:', e);
-          }
-        }
-        
-        const savedMotto = localStorage.getItem('workoutMotto');
-        if (savedMotto) {
-          setMotto(savedMotto);
-        }
-      }, []);
+    <div id="logView">
+      <div class="card">
+        <h2 style="margin-bottom: 16px;">➕ Log Workout</h2>
+        <div class="input-grid">
+          <input type="text" id="exercise" placeholder="Exercise (e.g., Bench Press)" list="exerciseList">
+          <datalist id="exerciseList"></datalist>
+          <input type="text" id="weight" placeholder="Weight (lbs)">
+          <input type="text" id="reps" placeholder="Reps">
+          <input type="text" id="sets" placeholder="Sets">
+          <button class="btn-primary" onclick="addWorkout()">Add</button>
+        </div>
+      </div>
 
-      useEffect(() => {
-        localStorage.setItem('workoutData', JSON.stringify(workouts));
-      }, [workouts]);
-
-      const saveMotto = () => {
-        const newMotto = tempMotto.trim() || 'BRICK BY BRICK';
-        setMotto(newMotto);
-        localStorage.setItem('workoutMotto', newMotto);
-        setIsEditingMotto(false);
-        setTempMotto('');
-      };
-
-      const startEditingMotto = () => {
-        setTempMotto(motto);
-        setIsEditingMotto(true);
-      };
-
-      const addWorkout = () => {
-        if (!currentExercise || !currentWeight || !currentReps || !currentSets) {
-          alert('Please fill in all fields');
-          return;
-        }
-
-        const newWorkout = {
-          id: Date.now(),
-          exercise: currentExercise.trim(),
-          weight: currentWeight.trim(),
-          reps: currentReps.trim(),
-          sets: currentSets.trim(),
-          date: new Date().toISOString(),
-          displayDate: new Date().toLocaleDateString()
-        };
-
-        setWorkouts([newWorkout, ...workouts]);
-        
-        setCurrentExercise('');
-        setCurrentWeight('');
-        setCurrentReps('');
-        setCurrentSets('');
-      };
-
-      const deleteWorkout = (id) => {
-        if (confirm('Delete this workout?')) {
-          setWorkouts(workouts.filter(w => w.id !== id));
-        }
-      };
-
-      const startEditingWorkout = (workout) => {
-        setEditingWorkoutId(workout.id);
-        setEditForm({
-          exercise: workout.exercise,
-          weight: workout.weight,
-          reps: workout.reps,
-          sets: workout.sets
-        });
-      };
-
-      const cancelEdit = () => {
-        setEditingWorkoutId(null);
-        setEditForm({ exercise: '', weight: '', reps: '', sets: '' });
-      };
-
-      const saveEdit = (id) => {
-        if (!editForm.exercise || !editForm.weight || !editForm.reps || !editForm.sets) {
-          alert('Please fill in all fields');
-          return;
-        }
-
-        setWorkouts(workouts.map(w => 
-          w.id === id 
-            ? { 
-                ...w, 
-                exercise: editForm.exercise.trim(),
-                weight: editForm.weight.trim(),
-                reps: editForm.reps.trim(),
-                sets: editForm.sets.trim()
-              }
-            : w
-        ));
-        
-        cancelEdit();
-      };
-
-      const getUniqueExercises = () => {
-        const exercises = [...new Set(workouts.map(w => w.exercise))];
-        return exercises.sort();
-      };
-
-      const getFilteredWorkouts = () => {
-        if (selectedExercise === 'all') return workouts;
-        return workouts.filter(w => w.exercise === selectedExercise);
-      };
-
-      const getChartData = () => {
-        const filtered = getFilteredWorkouts();
-        const grouped = {};
-        
-        filtered.forEach(workout => {
-          const key = `${workout.displayDate}-${workout.exercise}`;
-          const workoutWeight = parseFloat(String(workout.weight).split('-')[0]) || 0;
-          const existingWeight = grouped[key] ? parseFloat(String(grouped[key].weight).split('-')[0]) || 0 : 0;
-          
-          if (!grouped[key] || existingWeight < workoutWeight) {
-            grouped[key] = { ...workout, weight: workoutWeight };
-          }
-        });
-
-        return Object.values(grouped)
-          .sort((a, b) => new Date(a.date) - new Date(b.date))
-          .slice(-10);
-      };
-
-      const getTotalVolume = (workout) => {
-        const weight = parseFloat(String(workout.weight).split('-')[0]) || 0;
-        const reps = parseFloat(String(workout.reps).split('-')[0]) || 0;
-        const sets = parseFloat(String(workout.sets).split('-')[0]) || 0;
-        return weight * reps * sets;
-      };
-
-      const getStats = () => {
-        const filtered = getFilteredWorkouts();
-        if (filtered.length === 0) return null;
-
-        const weights = filtered.map(w => parseFloat(String(w.weight).split('-')[0]) || 0);
-        const maxWeight = Math.max(...weights);
-        const totalVolume = filtered.reduce((sum, w) => sum + getTotalVolume(w), 0);
-        const avgWeight = weights.reduce((sum, w) => sum + w, 0) / filtered.length;
-
-        return {
-          maxWeight: maxWeight.toFixed(0),
-          totalVolume: totalVolume.toFixed(0),
-          avgWeight: avgWeight.toFixed(1),
-          totalWorkouts: filtered.length
-        };
-      };
-
-      const stats = getStats();
-      const uniqueExercises = getUniqueExercises();
-
-      return (
-        <div className="p-4">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-8 pt-6">
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
-                💪 Workout Tracker
-              </h1>
-              <p className="text-slate-400">Track your lifts, build your strength</p>
-            </div>
-
-            <div className="flex gap-2 mb-6 bg-slate-800/50 p-1 rounded-lg w-fit mx-auto">
-              <button
-                onClick={() => setView('log')}
-                className={`px-6 py-2 rounded-md font-medium transition-all ${
-                  view === 'log'
-                    ? 'bg-blue-500 text-white shadow-lg'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                Workout Log
-              </button>
-              <button
-                onClick={() => setView('chart')}
-                className={`px-6 py-2 rounded-md font-medium transition-all ${
-                  view === 'chart'
-                    ? 'bg-blue-500 text-white shadow-lg'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                Progress Chart
-              </button>
-            </div>
-
-            {view === 'log' ? (
-              <>
-                <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 mb-6 shadow-2xl border border-slate-700">
-                  <h2 className="text-xl font-semibold mb-4">➕ Log Workout</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                    <input
-                      type="text"
-                      placeholder="Exercise"
-                      value={currentExercise}
-                      onChange={(e) => setCurrentExercise(e.target.value)}
-                      className="bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      list="exercise-list"
-                    />
-                    <datalist id="exercise-list">
-                      {uniqueExercises.map(ex => (
-                        <option key={ex} value={ex} />
-                      ))}
-                    </datalist>
-                    <input
-                      type="text"
-                      placeholder="Weight"
-                      value={currentWeight}
-                      onChange={(e) => setCurrentWeight(e.target.value)}
-                      className="bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Reps"
-                      value={currentReps}
-                      onChange={(e) => setCurrentReps(e.target.value)}
-                      className="bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Sets"
-                      value={currentSets}
-                      onChange={(e) => setCurrentSets(e.target.value)}
-                      className="bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <button
-                      onClick={addWorkout}
-                      className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg px-6 py-2 font-medium transition-colors shadow-lg"
-                    >
-                      Add
-                    </button>
-                  </div>
-                </div>
-
-                {stats && (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
-                      <div className="text-slate-400 text-sm mb-1">Max Weight</div>
-                      <div className="text-2xl font-bold text-blue-400">{stats.maxWeight} lbs</div>
-                    </div>
-                    <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
-                      <div className="text-slate-400 text-sm mb-1">Total Volume</div>
-                      <div className="text-2xl font-bold text-purple-400">{stats.totalVolume} lbs</div>
-                    </div>
-                    <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
-                      <div className="text-slate-400 text-sm mb-1">Avg Weight</div>
-                      <div className="text-2xl font-bold text-green-400">{stats.avgWeight} lbs</div>
-                    </div>
-                    <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
-                      <div className="text-slate-400 text-sm mb-1">Total Sets</div>
-                      <div className="text-2xl font-bold text-orange-400">{stats.totalWorkouts}</div>
-                    </div>
-                  </div>
-                )}
-
-                <div className="mb-4">
-                  <select
-                    value={selectedExercise}
-                    onChange={(e) => setSelectedExercise(e.target.value)}
-                    className="bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="all">All Exercises</option>
-                    {uniqueExercises.map(ex => (
-                      <option key={ex} value={ex}>{ex}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="bg-slate-800/50 rounded-xl shadow-2xl border border-slate-700 overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="bg-slate-700/50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase">Date</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase">Exercise</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase">Weight</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase">Reps</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase">Sets</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase">Volume</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-700">
-                        {getFilteredWorkouts().length === 0 ? (
-                          <tr>
-                            <td colSpan="7" className="px-6 py-12 text-center text-slate-400">
-                              No workouts logged yet. Start tracking!
-                            </td>
-                          </tr>
-                        ) : (
-                          getFilteredWorkouts().map((workout) => (
-                            <tr key={workout.id} className="hover:bg-slate-700/30 transition-colors">
-                              {editingWorkoutId === workout.id ? (
-                                <>
-                                  <td className="px-6 py-4 text-sm text-slate-300">{workout.displayDate}</td>
-                                  <td className="px-6 py-4">
-                                    <input
-                                      type="text"
-                                      value={editForm.exercise}
-                                      onChange={(e) => setEditForm({ ...editForm, exercise: e.target.value })}
-                                      className="bg-slate-700 border border-slate-600 rounded px-2 py-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
-                                  </td>
-                                  <td className="px-6 py-4">
-                                    <input
-                                      type="text"
-                                      value={editForm.weight}
-                                      onChange={(e) => setEditForm({ ...editForm, weight: e.target.value })}
-                                      className="bg-slate-700 border border-slate-600 rounded px-2 py-1 w-20 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
-                                  </td>
-                                  <td className="px-6 py-4">
-                                    <input
-                                      type="text"
-                                      value={editForm.reps}
-                                      onChange={(e) => setEditForm({ ...editForm, reps: e.target.value })}
-                                      className="bg-slate-700 border border-slate-600 rounded px-2 py-1 w-16 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
-                                  </td>
-                                  <td className="px-6 py-4">
-                                    <input
-                                      type="text"
-                                      value={editForm.sets}
-                                      onChange={(e) => setEditForm({ ...editForm, sets: e.target.value })}
-                                      className="bg-slate-700 border border-slate-600 rounded px-2 py-1 w-16 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
-                                  </td>
-                                  <td className="px-6 py-4 text-purple-400 font-semibold">
-                                    {getTotalVolume({ weight: editForm.weight, reps: editForm.reps, sets: editForm.sets }).toFixed(0)} lbs
-                                  </td>
-                                  <td className="px-6 py-4">
-                                    <div className="flex gap-2">
-                                      <button onClick={() => saveEdit(workout.id)} className="text-green-400 hover:text-green-300 text-sm font-semibold">Save</button>
-                                      <button onClick={cancelEdit} className="text-slate-400 hover:text-slate-300 text-sm">Cancel</button>
-                                      <button onClick={() => deleteWorkout(workout.id)} className="text-red-400 hover:text-red-300 text-sm">Delete</button>
-                                    </div>
-                                  </td>
-                                </>
-                              ) : (
-                                <>
-                                  <td className="px-6 py-4 text-sm text-slate-300">{workout.displayDate}</td>
-                                  <td className="px-6 py-4 font-medium">{workout.exercise}</td>
-                                  <td className="px-6 py-4 text-blue-400 font-semibold">{workout.weight} lbs</td>
-                                  <td className="px-6 py-4 text-slate-300">{workout.reps}</td>
-                                  <td className="px-6 py-4 text-slate-300">{workout.sets}</td>
-                                  <td className="px-6 py-4 text-purple-400 font-semibold">{getTotalVolume(workout).toFixed(0)} lbs</td>
-                                  <td className="px-6 py-4">
-                                    <button onClick={() => startEditingWorkout(workout)} className="text-blue-400 hover:text-blue-300 font-semibold">Edit</button>
-                                  </td>
-                                </>
-                              )}
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="mb-4">
-                  <select
-                    value={selectedExercise}
-                    onChange={(e) => setSelectedExercise(e.target.value)}
-                    className="bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="all">All Exercises</option>
-                    {uniqueExercises.map(ex => (
-                      <option key={ex} value={ex}>{ex}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="bg-slate-800/50 rounded-xl p-6 shadow-2xl border border-slate-700">
-                  <h2 className="text-xl font-semibold mb-4">📈 Weight Progress</h2>
-                  {getChartData().length === 0 ? (
-                    <div className="text-center py-12 text-slate-400">
-                      No data yet. Log some workouts first!
-                    </div>
-                  ) : (
-                    <ResponsiveContainer width="100%" height={400}>
-                      <LineChart data={getChartData()}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#475569" />
-                        <XAxis dataKey="displayDate" stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
-                        <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
-                        <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569', borderRadius: '8px' }} />
-                        <Legend />
-                        <Line type="monotone" dataKey="weight" stroke="#3b82f6" strokeWidth={3} dot={{ fill: '#3b82f6', r: 5 }} name="Weight (lbs)" />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  )}
-                </div>
-              </>
-            )}
-
-            <div className="mt-8 text-center pb-8">
-              {!isEditingMotto ? (
-                <div className="flex flex-col items-center gap-3">
-                  <div className="text-3xl font-bold tracking-wider bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 bg-clip-text text-transparent">
-                    {motto}
-                  </div>
-                  <button onClick={startEditingMotto} className="text-sm text-slate-400 hover:text-slate-300">Edit Motto</button>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center gap-3">
-                  <input
-                    type="text"
-                    value={tempMotto}
-                    onChange={(e) => setTempMotto(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && saveMotto()}
-                    placeholder="Enter your motto"
-                    className="bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-2 text-center text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-md"
-                    autoFocus
-                  />
-                  <div className="flex gap-2">
-                    <button onClick={saveMotto} className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg px-4 py-1 text-sm font-medium">Save</button>
-                    <button onClick={() => { setIsEditingMotto(false); setTempMotto(''); }} className="bg-slate-600 hover:bg-slate-500 text-white rounded-lg px-4 py-1 text-sm font-medium">Cancel</button>
-                  </div>
-                </div>
-              )}
-            </div>
+      <div id="statsContainer" class="hidden">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Max Weight</div>
+            <div class="stat-value" style="color: #60a5fa;" id="maxWeight">0 lbs</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Total Volume</div>
+            <div class="stat-value" style="color: #a78bfa;" id="totalVolume">0 lbs</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Avg Weight</div>
+            <div class="stat-value" style="color: #34d399;" id="avgWeight">0 lbs</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Total Sets</div>
+            <div class="stat-value" style="color: #fb923c;" id="totalSets">0</div>
           </div>
         </div>
-      );
+      </div>
+
+      <div style="margin-bottom: 16px;">
+        <select id="filterExercise" onchange="renderTable()">
+          <option value="all">All Exercises</option>
+        </select>
+      </div>
+
+      <div class="card">
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Exercise</th>
+                <th>Weight</th>
+                <th>Reps</th>
+                <th>Sets</th>
+                <th>Volume</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="workoutTable">
+              <tr>
+                <td colspan="7" style="text-align: center; color: #94a3b8; padding: 48px;">
+                  No workouts logged yet. Start tracking your lifts above!
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="chartView" class="hidden">
+      <div class="card">
+        <h2>📈 Progress Chart</h2>
+        <p style="color: #94a3b8; margin-top: 16px; text-align: center;">Chart view coming soon! Track your workouts in the log for now.</p>
+      </div>
+    </div>
+
+    <div class="motto-section">
+      <div id="mottoDisplay">
+        <div class="motto-text" id="mottoText">BRICK BY BRICK</div>
+        <button class="motto-edit" onclick="editMotto()">Edit Motto</button>
+      </div>
+      <div id="mottoEdit" class="hidden">
+        <input type="text" id="mottoInput" placeholder="Enter your motto" style="max-width: 400px; text-align: center; font-size: 18px; margin-bottom: 16px;">
+        <div>
+          <button class="btn-primary" onclick="saveMotto()">Save</button>
+          <button class="btn-cancel" onclick="cancelMotto()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let workouts = [];
+    let motto = 'BRICK BY BRICK';
+    let editingId = null;
+
+    // Load from localStorage
+    window.onload = function() {
+      const saved = localStorage.getItem('workoutData');
+      if (saved) {
+        try {
+          workouts = JSON.parse(saved);
+          renderTable();
+          updateStats();
+        } catch (e) {
+          console.error('Error loading data');
+        }
+      }
+      
+      const savedMotto = localStorage.getItem('workoutMotto');
+      if (savedMotto) {
+        motto = savedMotto;
+        document.getElementById('mottoText').textContent = motto;
+      }
+    };
+
+    function showView(view) {
+      document.getElementById('logView').classList.toggle('hidden', view !== 'log');
+      document.getElementById('chartView').classList.toggle('hidden', view !== 'chart');
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      event.target.classList.add('active');
     }
 
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<WorkoutTracker />);
+    function addWorkout() {
+      const exercise = document.getElementById('exercise').value.trim();
+      const weight = document.getElementById('weight').value.trim();
+      const reps = document.getElementById('reps').value.trim();
+      const sets = document.getElementById('sets').value.trim();
+
+      if (!exercise || !weight || !reps || !sets) {
+        alert('Please fill in all fields');
+        return;
+      }
+
+      const workout = {
+        id: Date.now(),
+        exercise,
+        weight,
+        reps,
+        sets,
+        date: new Date().toISOString(),
+        displayDate: new Date().toLocaleDateString()
+      };
+
+      workouts.unshift(workout);
+      saveData();
+      renderTable();
+      updateStats();
+
+      // Clear form
+      document.getElementById('exercise').value = '';
+      document.getElementById('weight').value = '';
+      document.getElementById('reps').value = '';
+      document.getElementById('sets').value = '';
+    }
+
+    function deleteWorkout(id) {
+      if (confirm('Delete this workout?')) {
+        workouts = workouts.filter(w => w.id !== id);
+        saveData();
+        renderTable();
+        updateStats();
+      }
+    }
+
+    function startEdit(id) {
+      editingId = id;
+      renderTable();
+    }
+
+    function saveEdit(id) {
+      const exercise = document.getElementById('edit-exercise-' + id).value.trim();
+      const weight = document.getElementById('edit-weight-' + id).value.trim();
+      const reps = document.getElementById('edit-reps-' + id).value.trim();
+      const sets = document.getElementById('edit-sets-' + id).value.trim();
+
+      if (!exercise || !weight || !reps || !sets) {
+        alert('Please fill in all fields');
+        return;
+      }
+
+      workouts = workouts.map(w => w.id === id ? {...w, exercise, weight, reps, sets} : w);
+      editingId = null;
+      saveData();
+      renderTable();
+      updateStats();
+    }
+
+    function cancelEdit() {
+      editingId = null;
+      renderTable();
+    }
+
+    function renderTable() {
+      const filter = document.getElementById('filterExercise').value;
+      const filtered = filter === 'all' ? workouts : workouts.filter(w => w.exercise === filter);
+      
+      const tbody = document.getElementById('workoutTable');
+      
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #94a3b8; padding: 48px;">No workouts logged yet. Start tracking your lifts above!</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(w => {
+        const volume = calcVolume(w);
+        
+        if (editingId === w.id) {
+          return `
+            <tr>
+              <td>${w.displayDate}</td>
+              <td><input type="text" id="edit-exercise-${w.id}" value="${w.exercise}" style="width: 100%;"></td>
+              <td><input type="text" id="edit-weight-${w.id}" value="${w.weight}" style="width: 80px;"></td>
+              <td><input type="text" id="edit-reps-${w.id}" value="${w.reps}" style="width: 60px;"></td>
+              <td><input type="text" id="edit-sets-${w.id}" value="${w.sets}" style="width: 60px;"></td>
+              <td style="color: #a78bfa; font-weight: 600;">${volume.toFixed(0)} lbs</td>
+              <td>
+                <button class="btn-save" onclick="saveEdit(${w.id})">Save</button>
+                <button class="btn-cancel" onclick="cancelEdit()">Cancel</button>
+                <button class="btn-delete" onclick="deleteWorkout(${w.id})">Delete</button>
+              </td>
+            </tr>
+          `;
+        }
+        
+        return `
+          <tr>
+            <td style="color: #cbd5e1;">${w.displayDate}</td>
+            <td style="font-weight: 500;">${w.exercise}</td>
+            <td style="color: #60a5fa; font-weight: 600;">${w.weight} lbs</td>
+            <td style="color: #cbd5e1;">${w.reps}</td>
+            <td style="color: #cbd5e1;">${w.sets}</td>
+            <td style="color: #a78bfa; font-weight: 600;">${volume.toFixed(0)} lbs</td>
+            <td>
+              <button class="btn-edit" onclick="startEdit(${w.id})">Edit</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      updateFilterOptions();
+    }
+
+    function updateFilterOptions() {
+      const exercises = [...new Set(workouts.map(w => w.exercise))].sort();
+      const datalist = document.getElementById('exerciseList');
+      datalist.innerHTML = exercises.map(ex => `<option value="${ex}">`).join('');
+      
+      const filter = document.getElementById('filterExercise');
+      const currentValue = filter.value;
+      filter.innerHTML = '<option value="all">All Exercises</option>' + 
+        exercises.map(ex => `<option value="${ex}">${ex}</option>`).join('');
+      filter.value = currentValue;
+    }
+
+    function calcVolume(workout) {
+      const weight = parseFloat(String(workout.weight).split('-')[0]) || 0;
+      const reps = parseFloat(String(workout.reps).split('-')[0]) || 0;
+      const sets = parseFloat(String(workout.sets).split('-')[0]) || 0;
+      return weight * reps * sets;
+    }
+
+    function updateStats() {
+      if (workouts.length === 0) {
+        document.getElementById('statsContainer').classList.add('hidden');
+        return;
+      }
+
+      document.getElementById('statsContainer').classList.remove('hidden');
+      
+      const weights = workouts.map(w => parseFloat(String(w.weight).split('-')[0]) || 0);
+      const maxWeight = Math.max(...weights);
+      const totalVolume = workouts.reduce((sum, w) => sum + calcVolume(w), 0);
+      const avgWeight = weights.reduce((a, b) => a + b, 0) / weights.length;
+
+      document.getElementById('maxWeight').textContent = maxWeight.toFixed(0) + ' lbs';
+      document.getElementById('totalVolume').textContent = totalVolume.toFixed(0) + ' lbs';
+      document.getElementById('avgWeight').textContent = avgWeight.toFixed(1) + ' lbs';
+      document.getElementById('totalSets').textContent = workouts.length;
+    }
+
+    function saveData() {
+      localStorage.setItem('workoutData', JSON.stringify(workouts));
+    }
+
+    function editMotto() {
+      document.getElementById('mottoDisplay').classList.add('hidden');
+      document.getElementById('mottoEdit').classList.remove('hidden');
+      document.getElementById('mottoInput').value = motto;
+      document.getElementById('mottoInput').focus();
+    }
+
+    function saveMotto() {
+      const newMotto = document.getElementById('mottoInput').value.trim() || 'BRICK BY BRICK';
+      motto = newMotto;
+      document.getElementById('mottoText').textContent = motto;
+      localStorage.setItem('workoutMotto', motto);
+      cancelMotto();
+    }
+
+    function cancelMotto() {
+      document.getElementById('mottoDisplay').classList.remove('hidden');
+      document.getElementById('mottoEdit').classList.add('hidden');
+    }
   </script>
 </body>
 </html>
