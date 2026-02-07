@@ -99,6 +99,12 @@
     }
     .stat-label { color: #94a3b8; font-size: 14px; margin-bottom: 8px; }
     .stat-value { font-size: 28px; font-weight: 700; }
+    .filter-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -140,6 +146,9 @@
     .motto-edit { color: #94a3b8; font-size: 14px; cursor: pointer; background: none; border: none; padding: 8px; }
     .hidden { display: none; }
     input[type="text"]:focus, select:focus { outline: none; border-color: #3b82f6; }
+    @media (max-width: 640px) {
+      .filter-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -165,6 +174,15 @@
         </div>
       </div>
 
+      <div class="filter-grid">
+        <select id="filterDate" onchange="renderTable(); updateStats();">
+          <option value="all">All Dates</option>
+        </select>
+        <select id="filterExercise" onchange="renderTable(); updateStats();">
+          <option value="all">All Exercises</option>
+        </select>
+      </div>
+
       <div id="statsContainer" class="hidden">
         <div class="stats-grid">
           <div class="stat-card">
@@ -184,12 +202,6 @@
             <div class="stat-value" style="color: #fb923c;" id="totalSets">0</div>
           </div>
         </div>
-      </div>
-
-      <div style="margin-bottom: 16px;">
-        <select id="filterExercise" onchange="renderTable()">
-          <option value="all">All Exercises</option>
-        </select>
       </div>
 
       <div class="card">
@@ -245,7 +257,6 @@
     let motto = 'BRICK BY BRICK';
     let editingId = null;
 
-    // Load from localStorage
     window.onload = function() {
       const saved = localStorage.getItem('workoutData');
       if (saved) {
@@ -256,6 +267,46 @@
         } catch (e) {
           console.error('Error loading data');
         }
+      } else {
+        // Add sample workouts if no data exists
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const twoDaysAgo = new Date(today);
+        twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+        
+        workouts = [
+          {
+            id: Date.now() - 1,
+            exercise: 'Bench Press',
+            weight: '185',
+            reps: '8',
+            sets: '3',
+            date: today.toISOString(),
+            displayDate: today.toLocaleDateString()
+          },
+          {
+            id: Date.now() - 2,
+            exercise: 'Squats',
+            weight: '225',
+            reps: '10',
+            sets: '4',
+            date: yesterday.toISOString(),
+            displayDate: yesterday.toLocaleDateString()
+          },
+          {
+            id: Date.now() - 3,
+            exercise: 'Deadlift',
+            weight: '315',
+            reps: '5',
+            sets: '3',
+            date: twoDaysAgo.toISOString(),
+            displayDate: twoDaysAgo.toLocaleDateString()
+          }
+        ];
+        saveData();
+        renderTable();
+        updateStats();
       }
       
       const savedMotto = localStorage.getItem('workoutMotto');
@@ -300,7 +351,6 @@
       renderTable();
       updateStats();
 
-      // Clear form
       document.getElementById('exercise').value = '';
       document.getElementById('weight').value = '';
       document.getElementById('reps').value = '';
@@ -344,14 +394,29 @@
       renderTable();
     }
 
-    function renderTable() {
-      const filter = document.getElementById('filterExercise').value;
-      const filtered = filter === 'all' ? workouts : workouts.filter(w => w.exercise === filter);
+    function getFilteredWorkouts() {
+      const dateFilter = document.getElementById('filterDate').value;
+      const exerciseFilter = document.getElementById('filterExercise').value;
       
+      let filtered = workouts;
+      
+      if (dateFilter !== 'all') {
+        filtered = filtered.filter(w => w.displayDate === dateFilter);
+      }
+      
+      if (exerciseFilter !== 'all') {
+        filtered = filtered.filter(w => w.exercise === exerciseFilter);
+      }
+      
+      return filtered;
+    }
+
+    function renderTable() {
+      const filtered = getFilteredWorkouts();
       const tbody = document.getElementById('workoutTable');
       
       if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #94a3b8; padding: 48px;">No workouts logged yet. Start tracking your lifts above!</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #94a3b8; padding: 48px;">No workouts match your filters.</td></tr>';
         return;
       }
 
@@ -395,15 +460,28 @@
     }
 
     function updateFilterOptions() {
+      // Update date filter
+      const dates = [...new Set(workouts.map(w => w.displayDate))].sort((a, b) => {
+        return new Date(b) - new Date(a); // Sort newest first
+      });
+      
+      const dateFilter = document.getElementById('filterDate');
+      const currentDateValue = dateFilter.value;
+      dateFilter.innerHTML = '<option value="all">All Dates</option>' + 
+        dates.map(date => `<option value="${date}">${date}</option>`).join('');
+      dateFilter.value = currentDateValue;
+      
+      // Update exercise filter
       const exercises = [...new Set(workouts.map(w => w.exercise))].sort();
+      const exerciseFilter = document.getElementById('filterExercise');
+      const currentExerciseValue = exerciseFilter.value;
+      exerciseFilter.innerHTML = '<option value="all">All Exercises</option>' + 
+        exercises.map(ex => `<option value="${ex}">${ex}</option>`).join('');
+      exerciseFilter.value = currentExerciseValue;
+      
+      // Update datalist for autocomplete
       const datalist = document.getElementById('exerciseList');
       datalist.innerHTML = exercises.map(ex => `<option value="${ex}">`).join('');
-      
-      const filter = document.getElementById('filterExercise');
-      const currentValue = filter.value;
-      filter.innerHTML = '<option value="all">All Exercises</option>' + 
-        exercises.map(ex => `<option value="${ex}">${ex}</option>`).join('');
-      filter.value = currentValue;
     }
 
     function calcVolume(workout) {
@@ -414,22 +492,24 @@
     }
 
     function updateStats() {
-      if (workouts.length === 0) {
+      const filtered = getFilteredWorkouts();
+      
+      if (filtered.length === 0) {
         document.getElementById('statsContainer').classList.add('hidden');
         return;
       }
 
       document.getElementById('statsContainer').classList.remove('hidden');
       
-      const weights = workouts.map(w => parseFloat(String(w.weight).split('-')[0]) || 0);
+      const weights = filtered.map(w => parseFloat(String(w.weight).split('-')[0]) || 0);
       const maxWeight = Math.max(...weights);
-      const totalVolume = workouts.reduce((sum, w) => sum + calcVolume(w), 0);
+      const totalVolume = filtered.reduce((sum, w) => sum + calcVolume(w), 0);
       const avgWeight = weights.reduce((a, b) => a + b, 0) / weights.length;
 
       document.getElementById('maxWeight').textContent = maxWeight.toFixed(0) + ' lbs';
       document.getElementById('totalVolume').textContent = totalVolume.toFixed(0) + ' lbs';
       document.getElementById('avgWeight').textContent = avgWeight.toFixed(1) + ' lbs';
-      document.getElementById('totalSets').textContent = workouts.length;
+      document.getElementById('totalSets').textContent = filtered.length;
     }
 
     function saveData() {
