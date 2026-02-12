@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Workout Tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -232,8 +233,18 @@
 
     <div id="chartView" class="hidden">
       <div class="card">
-        <h2>📈 Progress Chart</h2>
-        <p style="color: #94a3b8; margin-top: 16px; text-align: center;">Chart view coming soon! Track your workouts in the log for now.</p>
+        <h2 style="margin-bottom: 16px;">📈 Progress Chart</h2>
+        <div style="margin-bottom: 24px;">
+          <select id="chartExerciseFilter" onchange="updateChart()" style="width: 100%; max-width: 300px;">
+            <option value="">Select an exercise</option>
+          </select>
+        </div>
+        <div id="chartContainer">
+          <canvas id="progressChart"></canvas>
+        </div>
+        <div id="noChartData" class="hidden" style="text-align: center; color: #94a3b8; padding: 40px;">
+          Select an exercise to view progress
+        </div>
       </div>
     </div>
 
@@ -323,6 +334,137 @@
         tab.classList.remove('active');
       });
       event.target.classList.add('active');
+      
+      if (view === 'chart') {
+        updateChartExerciseFilter();
+        updateChart();
+      }
+    }
+
+    let progressChart = null;
+
+    function updateChartExerciseFilter() {
+      const exercises = [...new Set(workouts.map(w => w.exercise))].sort();
+      const select = document.getElementById('chartExerciseFilter');
+      const currentValue = select.value;
+      
+      select.innerHTML = '<option value="">Select an exercise</option>' + 
+        exercises.map(ex => `<option value="${ex}">${ex}</option>`).join('');
+      
+      if (currentValue && exercises.includes(currentValue)) {
+        select.value = currentValue;
+      } else if (exercises.length > 0) {
+        select.value = exercises[0];
+      }
+    }
+
+    function updateChart() {
+      const selectedExercise = document.getElementById('chartExerciseFilter').value;
+      
+      if (!selectedExercise) {
+        document.getElementById('chartContainer').classList.add('hidden');
+        document.getElementById('noChartData').classList.remove('hidden');
+        return;
+      }
+
+      document.getElementById('chartContainer').classList.remove('hidden');
+      document.getElementById('noChartData').classList.add('hidden');
+
+      const exerciseWorkouts = workouts
+        .filter(w => w.exercise === selectedExercise)
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      if (exerciseWorkouts.length === 0) {
+        document.getElementById('chartContainer').classList.add('hidden');
+        document.getElementById('noChartData').classList.remove('hidden');
+        document.getElementById('noChartData').textContent = 'No data for this exercise';
+        return;
+      }
+
+      const labels = exerciseWorkouts.map(w => w.displayDate);
+      const data = exerciseWorkouts.map(w => parseFloat(String(w.weight).split('-')[0]) || 0);
+
+      const ctx = document.getElementById('progressChart').getContext('2d');
+
+      if (progressChart) {
+        progressChart.destroy();
+      }
+
+      progressChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Weight (lbs)',
+            data: data,
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            borderWidth: 3,
+            tension: 0.4,
+            pointRadius: 6,
+            pointBackgroundColor: '#3b82f6',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointHoverRadius: 8,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: {
+              display: true,
+              labels: {
+                color: '#cbd5e1',
+                font: { size: 14 }
+              }
+            },
+            tooltip: {
+              backgroundColor: '#1e293b',
+              titleColor: '#fff',
+              bodyColor: '#cbd5e1',
+              borderColor: '#475569',
+              borderWidth: 1,
+              padding: 12,
+              displayColors: false,
+              callbacks: {
+                label: function(context) {
+                  const workout = exerciseWorkouts[context.dataIndex];
+                  return [
+                    `Weight: ${workout.weight} lbs`,
+                    `Reps: ${workout.reps}`,
+                    `Sets: ${workout.sets}`
+                  ];
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              ticks: {
+                color: '#94a3b8',
+                font: { size: 12 }
+              },
+              grid: {
+                color: '#475569'
+              }
+            },
+            x: {
+              ticks: {
+                color: '#94a3b8',
+                font: { size: 12 },
+                maxRotation: 45,
+                minRotation: 45
+              },
+              grid: {
+                color: '#475569'
+              }
+            }
+          }
+        }
+      });
     }
 
     function addWorkout() {
