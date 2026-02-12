@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workout Tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #1e293b 100%);
+      min-height: 100vh;
+      color: white;
+      padding: 20px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    h1 { 
+      text-align: center; 
+      font-size: 2.5rem; 
+      margin-bottom: 10px;
+      background: linear-gradient(to right, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .subtitle { text-align: center; color: #94a3b8; margin-bottom: 30px; }
+    .tabs {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 30px;
+      background: rgba(30, 41, 59, 0.5);
+      padding: 8px;
+      border-radius: 12px;
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .tab {
+      padding: 12px 24px;
+      border: none;
+      background: transparent;
+      color: #94a3b8;
+      cursor: pointer;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.3s;
+    }
+    .tab.active {
+      background: #3b82f6;
+      color: white;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    }
+    .card {
+      background: rgba(30, 41, 59, 0.5);
+      backdrop-filter: blur(10px);
+      border: 1px solid #475569;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .input-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    input, select, button {
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid #475569;
+      background: rgba(51, 65, 85, 0.5);
+      color: white;
+      font-size: 14px;
+    }
+    input::placeholder { color: #94a3b8; }
+    button {
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s;
+    }
+    .btn-primary {
+      background: #3b82f6;
+      border: none;
+      color: white;
+    }
+    .btn-primary:hover { background: #2563eb; }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid #475569;
+      border-radius: 16px;
+      padding: 20px;
+    }
+    .stat-label { color: #94a3b8; font-size: 14px; margin-bottom: 8px; }
+    .stat-value { font-size: 28px; font-weight: 700; }
+    .filter-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+    }
+    th {
+      text-align: left;
+      padding: 12px;
+      background: rgba(51, 65, 85, 0.5);
+      color: #cbd5e1;
+      font-size: 12px;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    td {
+      padding: 16px 12px;
+      border-top: 1px solid #475569;
+    }
+    tr:hover { background: rgba(51, 65, 85, 0.3); }
+    .btn-edit { color: #60a5fa; background: none; border: none; padding: 4px 12px; }
+    .btn-save { color: #34d399; background: none; border: none; padding: 4px 8px; }
+    .btn-cancel { color: #94a3b8; background: none; border: none; padding: 4px 8px; }
+    .btn-delete { color: #f87171; background: none; border: none; padding: 4px 8px; }
+    .motto-section {
+      text-align: center;
+      margin-top: 40px;
+      padding-bottom: 40px;
+    }
+    .motto-text {
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(to right, #60a5fa, #a78bfa, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 16px;
+      letter-spacing: 2px;
+    }
+    .motto-edit { color: #94a3b8; font-size: 14px; cursor: pointer; background: none; border: none; padding: 8px; }
+    .hidden { display: none; }
+    input[type="text"]:focus, select:focus { outline: none; border-color: #3b82f6; }
+    @media (max-width: 640px) {
+      .filter-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>💪 Workout Tracker</h1>
+    <p class="subtitle">Track your lifts, build your strength</p>
+
+    <div class="tabs">
+      <button class="tab active" onclick="showView('log')">Workout Log</button>
+      <button class="tab" onclick="showView('chart')">Progress Chart</button>
+    </div>
+
+    <div id="logView">
+      <div class="card">
+        <h2 style="margin-bottom: 16px;">➕ Log Workout</h2>
+        <div class="input-grid">
+          <input type="text" id="exercise" placeholder="Exercise (e.g., Bench Press)" list="exerciseList">
+          <datalist id="exerciseList"></datalist>
+          <input type="text" id="weight" placeholder="Weight (lbs)">
+          <input type="text" id="reps" placeholder="Reps">
+          <input type="text" id="sets" placeholder="Sets">
+          <button class="btn-primary" onclick="addWorkout()">Add</button>
+        </div>
+      </div>
+
+      <div class="filter-grid">
+        <select id="filterDate" onchange="renderTable(); updateStats();">
+          <option value="all">All Dates</option>
+        </select>
+        <select id="filterExercise" onchange="renderTable(); updateStats();">
+          <option value="all">All Exercises</option>
+        </select>
+      </div>
+
+      <div id="statsContainer" class="hidden">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Max Weight</div>
+            <div class="stat-value" style="color: #60a5fa;" id="maxWeight">0 lbs</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Total Volume</div>
+            <div class="stat-value" style="color: #a78bfa;" id="totalVolume">0 lbs</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Avg Weight</div>
+            <div class="stat-value" style="color: #34d399;" id="avgWeight">0 lbs</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Total Sets</div>
+            <div class="stat-value" style="color: #fb923c;" id="totalSets">0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Exercise</th>
+                <th>Weight</th>
+                <th>Reps</th>
+                <th>Sets</th>
+                <th>Volume</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="workoutTable">
+              <tr>
+                <td colspan="7" style="text-align: center; color: #94a3b8; padding: 48px;">
+                  No workouts logged yet. Start tracking your lifts above!
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="chartView" class="hidden">
+      <div class="card">
+        <h2 style="margin-bottom: 16px;">📈 Progress Chart</h2>
+        <div style="margin-bottom: 24px;">
+          <select id="chartExerciseFilter" onchange="updateChart()" style="width: 100%; max-width: 300px;">
+            <option value="">Select an exercise</option>
+          </select>
+        </div>
+        <div id="chartContainer">
+          <canvas id="progressChart"></canvas>
+        </div>
+        <div id="noChartData" class="hidden" style="text-align: center; color: #94a3b8; padding: 40px;">
+          Select an exercise to view progress
+        </div>
+      </div>
+    </div>
+
+    <div class="motto-section">
+      <div id="mottoDisplay">
+        <div class="motto-text" id="mottoText">BRICK BY BRICK</div>
+        <button class="motto-edit" onclick="editMotto()">Edit Motto</button>
+      </div>
+      <div id="mottoEdit" class="hidden">
+        <input type="text" id="mottoInput" placeholder="Enter your motto" style="max-width: 400px; text-align: center; font-size: 18px; margin-bottom: 16px;">
+        <div>
+          <button class="btn-primary" onclick="saveMotto()">Save</button>
+          <button class="btn-cancel" onclick="cancelMotto()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let workouts = [];
+    let motto = 'BRICK BY BRICK';
+    let editingId = null;
+
+    window.onload = function() {
+      const saved = localStorage.getItem('workoutData');
+      if (saved) {
+        try {
+          workouts = JSON.parse(saved);
+          renderTable();
+          updateStats();
+        } catch (e) {
+          console.error('Error loading data');
+        }
+      } else {
+        // Add sample workouts if no data exists
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const twoDaysAgo = new Date(today);
+        twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+        
+        workouts = [
+          {
+            id: Date.now() - 1,
+            exercise: 'Bench Press',
+            weight: '185',
+            reps: '8',
+            sets: '3',
+            date: today.toISOString(),
+            displayDate: today.toLocaleDateString()
+          },
+          {
+            id: Date.now() - 2,
+            exercise: 'Squats',
+            weight: '225',
+            reps: '10',
+            sets: '4',
+            date: yesterday.toISOString(),
+            displayDate: yesterday.toLocaleDateString()
+          },
+          {
+            id: Date.now() - 3,
+            exercise: 'Deadlift',
+            weight: '315',
+            reps: '5',
+            sets: '3',
+            date: twoDaysAgo.toISOString(),
+            displayDate: twoDaysAgo.toLocaleDateString()
+          }
+        ];
+        saveData();
+        renderTable();
+        updateStats();
+      }
+      
+      const savedMotto = localStorage.getItem('workoutMotto');
+      if (savedMotto) {
+        motto = savedMotto;
+        document.getElementById('mottoText').textContent = motto;
+      }
+    };
+
+    function showView(view) {
+      document.getElementById('logView').classList.toggle('hidden', view !== 'log');
+      document.getElementById('chartView').classList.toggle('hidden', view !== 'chart');
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      event.target.classList.add('active');
+      
+      if (view === 'chart') {
+        updateChartExerciseFilter();
+        updateChart();
+      }
+    }
+
+    let progressChart = null;
+
+    function updateChartExerciseFilter() {
+      const exercises = [...new Set(workouts.map(w => w.exercise))].sort();
+      const select = document.getElementById('chartExerciseFilter');
+      const currentValue = select.value;
+      
+      select.innerHTML = '<option value="">Select an exercise</option>' + 
+        exercises.map(ex => `<option value="${ex}">${ex}</option>`).join('');
+      
+      if (currentValue && exercises.includes(currentValue)) {
+        select.value = currentValue;
+      } else if (exercises.length > 0) {
+        select.value = exercises[0];
+      }
+    }
+
+    function updateChart() {
+      const selectedExercise = document.getElementById('chartExerciseFilter').value;
+      
+      if (!selectedExercise) {
+        document.getElementById('chartContainer').classList.add('hidden');
+        document.getElementById('noChartData').classList.remove('hidden');
+        return;
+      }
+
+      document.getElementById('chartContainer').classList.remove('hidden');
+      document.getElementById('noChartData').classList.add('hidden');
+
+      const exerciseWorkouts = workouts
+        .filter(w => w.exercise === selectedExercise)
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      if (exerciseWorkouts.length === 0) {
+        document.getElementById('chartContainer').classList.add('hidden');
+        document.getElementById('noChartData').classList.remove('hidden');
+        document.getElementById('noChartData').textContent = 'No data for this exercise';
+        return;
+      }
+
+      const labels = exerciseWorkouts.map(w => w.displayDate);
+      const data = exerciseWorkouts.map(w => parseFloat(String(w.weight).split('-')[0]) || 0);
+
+      const ctx = document.getElementById('progressChart').getContext('2d');
+
+      if (progressChart) {
+        progressChart.destroy();
+      }
+
+      progressChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Weight (lbs)',
+            data: data,
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            borderWidth: 3,
+            tension: 0.4,
+            pointRadius: 6,
+            pointBackgroundColor: '#3b82f6',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointHoverRadius: 8,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: {
+              display: true,
+              labels: {
+                color: '#cbd5e1',
+                font: { size: 14 }
+              }
+            },
+            tooltip: {
+              backgroundColor: '#1e293b',
+              titleColor: '#fff',
+              bodyColor: '#cbd5e1',
+              borderColor: '#475569',
+              borderWidth: 1,
+              padding: 12,
+              displayColors: false,
+              callbacks: {
+                label: function(context) {
+                  const workout = exerciseWorkouts[context.dataIndex];
+                  return [
+                    `Weight: ${workout.weight} lbs`,
+                    `Reps: ${workout.reps}`,
+                    `Sets: ${workout.sets}`
+                  ];
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              ticks: {
+                color: '#94a3b8',
+                font: { size: 12 }
+              },
+              grid: {
+                color: '#475569'
+              }
+            },
+            x: {
+              ticks: {
+                color: '#94a3b8',
+                font: { size: 12 },
+                maxRotation: 45,
+                minRotation: 45
+              },
+              grid: {
+                color: '#475569'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function addWorkout() {
+      const exercise = document.getElementById('exercise').value.trim();
+      const weight = document.getElementById('weight').value.trim();
+      const reps = document.getElementById('reps').value.trim();
+      const sets = document.getElementById('sets').value.trim();
+
+      if (!exercise || !weight || !reps || !sets) {
+        alert('Please fill in all fields');
+        return;
+      }
+
+      const workout = {
+        id: Date.now(),
+        exercise,
+        weight,
+        reps,
+        sets,
+        date: new Date().toISOString(),
+        displayDate: new Date().toLocaleDateString()
+      };
+
+      workouts.unshift(workout);
+      saveData();
+      renderTable();
+      updateStats();
+
+      document.getElementById('exercise').value = '';
+      document.getElementById('weight').value = '';
+      document.getElementById('reps').value = '';
+      document.getElementById('sets').value = '';
+    }
+
+    function deleteWorkout(id) {
+      if (confirm('Delete this workout?')) {
+        workouts = workouts.filter(w => w.id !== id);
+        saveData();
+        renderTable();
+        updateStats();
+      }
+    }
+
+    function startEdit(id) {
+      editingId = id;
+      renderTable();
+    }
+
+    function saveEdit(id) {
+      const exercise = document.getElementById('edit-exercise-' + id).value.trim();
+      const weight = document.getElementById('edit-weight-' + id).value.trim();
+      const reps = document.getElementById('edit-reps-' + id).value.trim();
+      const sets = document.getElementById('edit-sets-' + id).value.trim();
+
+      if (!exercise || !weight || !reps || !sets) {
+        alert('Please fill in all fields');
+        return;
+      }
+
+      workouts = workouts.map(w => w.id === id ? {...w, exercise, weight, reps, sets} : w);
+      editingId = null;
+      saveData();
+      renderTable();
+      updateStats();
+    }
+
+    function cancelEdit() {
+      editingId = null;
+      renderTable();
+    }
+
+    function getFilteredWorkouts() {
+      const dateFilter = document.getElementById('filterDate').value;
+      const exerciseFilter = document.getElementById('filterExercise').value;
+      
+      let filtered = workouts;
+      
+      if (dateFilter !== 'all') {
+        filtered = filtered.filter(w => w.displayDate === dateFilter);
+      }
+      
+      if (exerciseFilter !== 'all') {
+        filtered = filtered.filter(w => w.exercise === exerciseFilter);
+      }
+      
+      return filtered;
+    }
+
+    function renderTable() {
+      const filtered = getFilteredWorkouts();
+      const tbody = document.getElementById('workoutTable');
+      
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #94a3b8; padding: 48px;">No workouts match your filters.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(w => {
+        const volume = calcVolume(w);
+        
+        if (editingId === w.id) {
+          return `
+            <tr>
+              <td>${w.displayDate}</td>
+              <td><input type="text" id="edit-exercise-${w.id}" value="${w.exercise}" style="width: 100%;"></td>
+              <td><input type="text" id="edit-weight-${w.id}" value="${w.weight}" style="width: 80px;"></td>
+              <td><input type="text" id="edit-reps-${w.id}" value="${w.reps}" style="width: 60px;"></td>
+              <td><input type="text" id="edit-sets-${w.id}" value="${w.sets}" style="width: 60px;"></td>
+              <td style="color: #a78bfa; font-weight: 600;">${volume.toFixed(0)} lbs</td>
+              <td>
+                <button class="btn-save" onclick="saveEdit(${w.id})">Save</button>
+                <button class="btn-cancel" onclick="cancelEdit()">Cancel</button>
+                <button class="btn-delete" onclick="deleteWorkout(${w.id})">Delete</button>
+              </td>
+            </tr>
+          `;
+        }
+        
+        return `
+          <tr>
+            <td style="color: #cbd5e1;">${w.displayDate}</td>
+            <td style="font-weight: 500;">${w.exercise}</td>
+            <td style="color: #60a5fa; font-weight: 600;">${w.weight} lbs</td>
+            <td style="color: #cbd5e1;">${w.reps}</td>
+            <td style="color: #cbd5e1;">${w.sets}</td>
+            <td style="color: #a78bfa; font-weight: 600;">${volume.toFixed(0)} lbs</td>
+            <td>
+              <button class="btn-edit" onclick="startEdit(${w.id})">Edit</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      updateFilterOptions();
+    }
+
+    function updateFilterOptions() {
+      // Update date filter
+      const dates = [...new Set(workouts.map(w => w.displayDate))].sort((a, b) => {
+        return new Date(b) - new Date(a); // Sort newest first
+      });
+      
+      const dateFilter = document.getElementById('filterDate');
+      const currentDateValue = dateFilter.value;
+      dateFilter.innerHTML = '<option value="all">All Dates</option>' + 
+        dates.map(date => `<option value="${date}">${date}</option>`).join('');
+      dateFilter.value = currentDateValue;
+      
+      // Update exercise filter
+      const exercises = [...new Set(workouts.map(w => w.exercise))].sort();
+      const exerciseFilter = document.getElementById('filterExercise');
+      const currentExerciseValue = exerciseFilter.value;
+      exerciseFilter.innerHTML = '<option value="all">All Exercises</option>' + 
+        exercises.map(ex => `<option value="${ex}">${ex}</option>`).join('');
+      exerciseFilter.value = currentExerciseValue;
+      
+      // Update datalist for autocomplete
+      const datalist = document.getElementById('exerciseList');
+      datalist.innerHTML = exercises.map(ex => `<option value="${ex}">`).join('');
+    }
+
+    function calcVolume(workout) {
+      const weight = parseFloat(String(workout.weight).split('-')[0]) || 0;
+      const reps = parseFloat(String(workout.reps).split('-')[0]) || 0;
+      const sets = parseFloat(String(workout.sets).split('-')[0]) || 0;
+      return weight * reps * sets;
+    }
+
+    function updateStats() {
+      const filtered = getFilteredWorkouts();
+      
+      if (filtered.length === 0) {
+        document.getElementById('statsContainer').classList.add('hidden');
+        return;
+      }
+
+      document.getElementById('statsContainer').classList.remove('hidden');
+      
+      const weights = filtered.map(w => parseFloat(String(w.weight).split('-')[0]) || 0);
+      const maxWeight = Math.max(...weights);
+      const totalVolume = filtered.reduce((sum, w) => sum + calcVolume(w), 0);
+      const avgWeight = weights.reduce((a, b) => a + b, 0) / weights.length;
+
+      document.getElementById('maxWeight').textContent = maxWeight.toFixed(0) + ' lbs';
+      document.getElementById('totalVolume').textContent = totalVolume.toFixed(0) + ' lbs';
+      document.getElementById('avgWeight').textContent = avgWeight.toFixed(1) + ' lbs';
+      document.getElementById('totalSets').textContent = filtered.length;
+    }
+
+    function saveData() {
+      localStorage.setItem('workoutData', JSON.stringify(workouts));
+    }
+
+    function editMotto() {
+      document.getElementById('mottoDisplay').classList.add('hidden');
+      document.getElementById('mottoEdit').classList.remove('hidden');
+      document.getElementById('mottoInput').value = motto;
+      document.getElementById('mottoInput').focus();
+    }
+
+    function saveMotto() {
+      const newMotto = document.getElementById('mottoInput').value.trim() || 'BRICK BY BRICK';
+      motto = newMotto;
+      document.getElementById('mottoText').textContent = motto;
+      localStorage.setItem('workoutMotto', motto);
+      cancelMotto();
+    }
+
+    function cancelMotto() {
+      document.getElementById('mottoDisplay').classList.remove('hidden');
+      document.getElementById('mottoEdit').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>
